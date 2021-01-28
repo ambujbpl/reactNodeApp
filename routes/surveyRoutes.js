@@ -24,12 +24,32 @@ module.exports = (app) => {
     res.send(data);
   });
 
-  app.get('/api/surveys/:surveyId/:choice', (req, res) => {
-    res.send('Thanks for your voting!');
+  app.get('/api/surveys/:surveyId/:email/:choice', async (req, res) => {
+    console.log(req.params);
+    const {surveyId , email, choice} = req.params;
+    const result = await Survey.updateOne(
+      {
+        _id: surveyId,
+        recipients: {
+          $elemMatch: { email: email, responded: false },
+        },
+      },
+      {
+        $inc: { [choice]: 1 },
+        $set: { 'recipients.$.responded': true },
+        lastResponded: new Date(),
+      }
+    ).exec();
+    console.log('result : ',result);
+    if(result.n === 1) {
+      res.send('Thanks for your voting!');
+    } else {
+      res.send('Sorry, You have already done your voting!');
+    }
   });
 
   app.post('/api/surveys/webhooks', (req, res) => {
-    const p = new Path('/api/surveys/:surveyId/:choice');
+    const p = new Path('/api/surveys/:surveyId/:email/:choice');
     console.log('req body : ',req.body);
     _.chain(req.body)
       .map(({ email, url, event }) => {
@@ -60,39 +80,42 @@ module.exports = (app) => {
         ).exec();
       })
       .value();
-
     res.send({});
   });
 
   app.post('/api/surveys', requireLogin, requireCredits, async (req, res) => {
     const { title, subject, body, recipients } = req.body;
     console.log(req.body);
-
+    const reci = recipients
+        .split(',')
+        .map((email) => ({ email: email.trim() }))
     const survey = new Survey({
       title,
       subject,
       body,
-      recipients: recipients
-        .split(',')
-        .map((email) => ({ email: email.trim() })),
+      recipients: reci,
       _user: req.user.id,
       dateSent: Date.now(),
     });
-
     // Great place to send an email!
     // const mailer = new Mailer(survey, surveyTemplate(survey));
-    const msg = {
-      to: recipients
-        .split(',')
-        .map((email) => ({ email: email.trim() })),
-      from: "ambuj.ideata@gmail.com",
-      subject: subject,
-      // text: "and easy to do anywhere, even with Node.js",
-      html: surveyTemplate(survey),
-    };
+    
+    // reci.forEach(email => {
+    for (var i = 0; i < reci.length; i++) {
+      let msg = {
+        to: reci[i].email,
+        from: "ambuj.ideata@gmail.com",
+        subject: subject,
+        // text: "and easy to do anywhere, even with Node.js",
+        html: surveyTemplate(survey,reci[i].email),
+      };
+      await sgMail.send(msg);
+    }
+      
+    // })
     try {
       // await mailer.send();
-      await sgMail.send(msg);
+      // await sgMail.send(msg);
       await survey.save();
       req.user.credits -= 1;
       const user = await req.user.save();
