@@ -2,9 +2,9 @@ import React from 'react';
 
 const Landing = () => {
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div style={{ textAlign: 'center', border: '1px solid black' }}>
       <h1>
-        Emaily!
+        Survey Application!
       </h1>
       Collect feedback form your users
     </div>
