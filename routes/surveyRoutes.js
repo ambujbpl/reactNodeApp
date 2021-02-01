@@ -24,6 +24,17 @@ module.exports = (app) => {
     res.send(data);
   });
 
+  app.post('/api/deleteSurvey', requireLogin, async (req, res) => {
+    Survey.deleteMany({_id: req.body.id}, function (err) {
+      if (err) {
+        console.log(err);
+        res.send({response:false,err});
+      } else {
+        res.send({response:true,'id': req.body.id});
+      }
+    });
+  });
+
   app.get('/api/surveys/:surveyId/:email/:choice', async (req, res) => {
     console.log(req.params);
     const {surveyId , email, choice} = req.params;

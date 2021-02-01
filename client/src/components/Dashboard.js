@@ -1,10 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { fetchSurvey } from '../actions'
+import { fetchSurvey, deleteSurvey } from '../actions';
 class Dashboard extends React.Component {
   componentDidMount(){
     this.props.fetchSurvey();
+  }
+  deleteSurvey = (id) => {
+    console.log(id);
+    this.props.deleteSurvey(id);
   }
   updateSurveyList = () => {
     return this.props.surveys.map(survey => {
@@ -22,6 +26,7 @@ class Dashboard extends React.Component {
           <div className="card-action">
             <a>Yes : {survey.yes}</a>
             <a>No : {survey.no}</a>
+            <button onClick={()=> this.deleteSurvey(survey._id)} className="btn btn-small red">Delete</button>
           </div>
         </div>
       );
@@ -48,4 +53,4 @@ const mapStateToProp = state => {
   }
 }
 
-export default connect(mapStateToProp,{fetchSurvey})(Dashboard);
+export default connect(mapStateToProp,{fetchSurvey,deleteSurvey})(Dashboard);
