@@ -7,27 +7,29 @@ class RecipientsList extends Component {
     this.props.fetchRecipients();
   }
   deleteRecipientItem = (id) => {
-    console.log('delete id : ',id);
     this.props.deleteRecipient(id,this.props.history);
+  }
+  updateEmailList = (email) => {
+    return email.split(',').map((e,i) => {
+      return <li key={i}>{e}</li>  
+    });
+    
   }
   updateRecipientList = () => {
     if(this.props.recipients.length > 0){
-      console.log(this.props.recipients);
       return this.props.recipients.map(recipient => {
         return (
           <div className="card blue-grey darken-1" key={recipient._id}>
             <div className="card-content">
               <span className="card-title">{recipient.recipientName}</span>
-              <p>
-                {recipient.emailList}
-              </p>
+              <ol>{this.updateEmailList(recipient.emailList)}</ol>
               <p className="right">
                 Created At: {new Date(recipient.createdDate).toLocaleDateString()}
               </p>
             </div>
             <div className="card-action">
               <a>Edit : </a>
-              <button onClick={()=> this.deleteRecipientItem(recipient._id)}>Delete</button>
+              <button className="btn red button-small"onClick={()=> this.deleteRecipientItem(recipient._id)}>Delete</button>
             </div>
           </div>
         );
